@@ -14,13 +14,13 @@ This application provides a powerful way to interact with complex scientific lit
 
 ---
 
-# **What Neuro-topics I scraped?
+**What Neuro-topics I scraped?**
 
 **Alzheimer_Disease**, **Stroke_Management**, **Epilepsy**, **Parkinson**, **Diagnostic**, **Neurotransmitter**, **Sclerosis**, **Migraine**, **Neurodevelopmental_disorder**, **TBI**, **Amyotrophic_Lateral_Sclerosis**, **Neuroinflammation**, **Sleep_disorder**, **Brain**, **Social_neurology**  
 
 ---
 
-# **Features**
+**Features**
 
 * **Intelligent Agent**: A **LangChain agent** orchestrates interactions, intelligently selecting the most appropriate tool (PDF analysis or knowledge base query) based on user intent and conversational context.
 * **Dynamic PDF Processing**: Upload any PDF research paper for on-the-fly analysis. The agent creates a **temporary, in-memory FAISS retriever** specifically for the uploaded document, allowing immediate querying.
@@ -33,7 +33,7 @@ This application provides a powerful way to interact with complex scientific lit
 
 ---
 
-## **Technologies Used**
+# **Technologies Used**
 
 * **Python 3.12**
 * **Streamlit**: For building the interactive web frontend.
@@ -44,11 +44,11 @@ This application provides a powerful way to interact with complex scientific lit
 * **Google Gemini (`gemini-2.0-flash`)**: As the underlying Large Language Model for generating responses and powering agent reasoning.
 ---
 
-# **Setup and Installation**
+**Setup and Installation**
 
 Follow these steps to get the Neuro Critics RAG & Critique Agent up and running on your local machine.
 
-# **1. Clone the Repository**
+**1. Clone the Repository**
 
 First, clone the project repository to your local machine:
 
@@ -56,8 +56,7 @@ First, clone the project repository to your local machine:
 git clone <your-repo-url>
 cd your-project-folder # Replace with your actual project folder name
 ```
-
-# **2. Create a Virtual Environment (Recommended)**
+ **2. Create a Virtual Environment (Recommended)**
 It's highly recommended to use a virtual environment to manage project dependencies:
 
 ```
@@ -77,7 +76,7 @@ On Windows:
 .\neuro_env\Scripts\activate
 ```
 
-# **3. Install Dependencies**
+**3. Install Dependencies**
 Install all required Python packages using pip:
 ```
 pip install -r requirements.txt
@@ -96,7 +95,7 @@ GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
 
 Important: Replace "YOUR_GEMINI_API_KEY_HERE" with your actual API key obtained from Google AI Studio.
 
-# **5. Build the FAISS Knowledge Base**
+**5. Build the FAISS Knowledge Base**
 The application relies on a pre-built FAISS index for its general knowledge base. You need to run the vector_store_builder.py script to create and populate this index. Ensure you have your data sources ready as configured within your data_fetch.py file.
 ```
 python vector_store_builder.py
