@@ -20,7 +20,7 @@ This application provides a powerful way to interact with complex scientific lit
 
 ---
 
-**Features**
+# **Features**
 
 * **Intelligent Agent**: A **LangChain agent** orchestrates interactions, intelligently selecting the most appropriate tool (PDF analysis or knowledge base query) based on user intent and conversational context.
 * **Dynamic PDF Processing**: Upload any PDF research paper for on-the-fly analysis. The agent creates a **temporary, in-memory FAISS retriever** specifically for the uploaded document, allowing immediate querying.
@@ -44,7 +44,7 @@ This application provides a powerful way to interact with complex scientific lit
 * **Google Gemini (`gemini-2.0-flash`)**: As the underlying Large Language Model for generating responses and powering agent reasoning.
 ---
 
-**Setup and Installation**
+**Setup and Installation** 
 
 Follow these steps to get the Neuro Critics RAG & Critique Agent up and running on your local machine.
 
