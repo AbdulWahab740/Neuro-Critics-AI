@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 EMBEDDING_MODEL_NAME = 'all-MiniLM-L6-v2'
 FAISS_INDEX_PATH = "./faiss_index"
 COLLECTION_NAME = "neuro_research_critics" 
-GEMINI_API_KEY = st.secrets("GEMINI_API_KEY")
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 TOPIC_CLASSIFICATION_THRESHOLD = 0.55
 
 try:
@@ -504,4 +504,5 @@ if prompt := st.chat_input("Ask a question or critique an uploaded paper..."):
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+
 
