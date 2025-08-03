@@ -1,5 +1,10 @@
 # Neuro Critics Agent 🔬
 **[Neuro-Critics - Live link](https://neuro-critics-ai.streamlit.app/)**
+
+If the response didn't work (maybe the API key got expired) I am sharing some working demo
+<img width="1686" height="874" alt="image" src="https://github.com/AbdulWahab740/Neuro-Critics-AI/blob/main/demo/respond_with_pdf.PNG" />
+
+Other image is in the end!!
 ---
 
 # **Overview**
@@ -139,3 +144,6 @@ neuro-critics-rag-agent/
 │   └── ...                 # (e.g., model.safetensors, tokenizer.json)
 ├── .env                    # Environment variables file (e.g., for GEMINI_API_KEY).
 └── requirements.txt        # Lists all Python dependencies required for the project.
+
+<img width="1686" height="874" alt="image" src="https://github.com/AbdulWahab740/Neuro-Critics-AI/blob/main/demo/chat_with_knowledge_based.PNG" />
+
