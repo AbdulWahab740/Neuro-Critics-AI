@@ -404,7 +404,7 @@ agent_executor = setup_agent()
 logging.info("Agent setup complete. Starting Streamlit UI rendering...")
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="🔬 Neuro Critics RAG & Critique Agent (FAISS)", page_icon="🔬")
+st.set_page_config(page_title="Neuro Critics RAG & Critique Agent (FAISS)", page_icon="🔬")
 
 st.title("🔬 Neuro Critics RAG & Critique Agent (FAISS)")
 st.markdown(
@@ -504,3 +504,4 @@ if prompt := st.chat_input("Ask a question or critique an uploaded paper..."):
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+
