@@ -366,7 +366,7 @@ def setup_agent():
         If the 'Current PDF Status' indicates a PDF is already loaded:
         - If the user's query is explicitly about the uploaded PDF (e.g., "Critique this paper", "Summarize the findings of the PDF", "What is the methodology in this document?"), then prioritize using `query_temp_pdf_for_critique`.
         - If the user explicitly asks to store the uploaded PDF (e.g., "Store this paper", "Save this PDF"), use `store_pdf_to_main_knowledge_base`.
-        - **If the user's query is a general question and NOT explicitly about the loaded PDF (e.g., "What is Parkinson's disease?", "Tell me about epilepsy treatments"), then use `query_main_knowledge_base`. these are some filter topics so you can take one of that from the relevancy with the query : ['Alzheimer_Disease', 'Stroke_Management', 'Epilepsy', 'Parkinson', 'Diagnostic', 'Neurotransmitter', 'Sclerosis', 'Migraine', 'Neurodevelopmental_disorder', 'TBI', 'Amyotrophic_Lateral_Sclerosis', 'Neuroinflammation', 'Sleep_disorder', 'Brain', 'Social_neurology'] **
+        - **If the user's query is a general question and NOT explicitly about the loaded PDF (e.g., "What is Parkinson's disease?", "Tell me about epilepsy treatments"), then use `query_main_knowledge_base`. these are some filter topics so you can take one of that from the relevancy with the query : ['Alzheimer_Disease', 'Stroke_Management', 'Epilepsy', 'Parkinson', 'Diagnostic', 'Neurotransmitter', 'Sclerosis', 'Migraine', 'developmental_disorder', 'TBI', 'Amyotrophic_Lateral_Sclerosis', 'Neuroinflammation', 'Sleep_disorder', 'Brain', 'Social_neurology'] **
         - **DO NOT ask for a PDF path again if one is already loaded.**
 
         When a user uploads a PDF, your first action should be to use the `load_pdf_and_create_temp_retriever` tool with the path to the uploaded PDF file.
@@ -404,11 +404,13 @@ agent_executor = setup_agent()
 logging.info("Agent setup complete. Starting Streamlit UI rendering...")
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="Neuro Critics RAG & Critique Agent (FAISS)", page_icon="🔬")
+st.set_page_config(page_title="Neuro Critics AI", page_icon="🔬")
 
-st.title("🔬 Neuro Critics RAG & Critique Agent (FAISS)")
+st.title("🔬 Neuro Critics AI")
 st.markdown(
     """
+    A RAG based Agentic flow app which retrieve Neurological informations from vector store. <br>
+    The Vector-store comparised of 100+ articles on several neurology-based topics.
     Ask questions about Parkinson's Disease, Epilepsy, Sclerosis, Migraine, ALS, TBI or Alzheimer's Disease..<br>
     It also contian Diagnositics, Brain, Stroke, sleep disorder and Neurotransmitter related infomrations.<br>
     **OR** upload a PDF paper and ask me to 'Critique this paper' or ask specific questions about it. <br>
@@ -504,5 +506,6 @@ if prompt := st.chat_input("Ask a question or critique an uploaded paper..."):
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+
 
 
