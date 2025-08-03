@@ -1,10 +1,11 @@
 # Neuro Critics Agent 🔬
-
+**[Neuro-Critics - Live link](https://neuro-critics-ai.streamlit.app/)**
 ---
 
 # **Overview**
 
-The **Neuro Critics RAG & Critique Agent** is an application designed to assist researchers and enthusiasts in the neurology field in biomedical, particularly focusing on neurological disorders like Parkinson's Disease, Epilepsy, and Alzheimer's Disease and Diagnositics. Leveraging **Retrieval-Augmented Generation (RAG)** and a LangChain agent, this tool empowers users to:
+The **Neuro Critics AI** is a RAG based Agentic flow app which retrieve Neurological informations from vector store. <br>
+The Vector-store comparised of 100+ articles on several topics of neurology. The application designed to assist researchers and enthusiasts in the neurology field in biomedical, particularly focusing on neurological disorders like Parkinson's Disease, Epilepsy, and Alzheimer's Disease and Diagnositics. Leveraging **Retrieval-Augmented Generation (RAG)** and a LangChain agent, this tool empowers users to:
 
 * **Query a pre-built knowledge base** on specified neurological topics.
 * **Upload and dynamically analyze PDF research papers** for critique or specific information extraction.
