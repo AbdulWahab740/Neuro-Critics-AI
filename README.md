@@ -1,10 +1,5 @@
 # Neuro Critics Agent 🔬
-**[Neuro-Critics - Live link](https://neuro-critics-ai.streamlit.app/)**
 
-If the response didn't work (maybe the API key got expired) I am sharing some working demo
-<img width="1686" height="874" alt="image" src="https://github.com/AbdulWahab740/Neuro-Critics-AI/blob/main/demo/chat_with_knowledge_based.PNG" />
-
-Other image is in the end!!
 ---
 
 # **Overview**
@@ -14,6 +9,7 @@ The Vector-store comparised of 100+ articles on several topics of neurology. The
 
 * **Query a pre-built knowledge base** on specified neurological topics.
 * **Upload and dynamically analyze PDF research papers** for critique or specific information extraction.
+* **Ask about any images content in PDF papers**. It will let you know what is in that image.
 * Engage in a conversational interface that intelligently decides whether to retrieve information from the uploaded PDF or the general knowledge base based on the query context.
 
 This application provides a powerful way to interact with complex scientific literature, offering quick summaries, critical insights, and relevant background information directly within your browser.
