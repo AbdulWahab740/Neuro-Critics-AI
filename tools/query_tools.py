@@ -54,17 +54,19 @@ def query_main_knowledge_base(
     
     # Generate response with confidence
     prompt = PromptTemplate.from_template("""
-    Based on the following context, provide a detailed answer to the query.
-    If the context doesn't contain enough information, say so explicitly.
-    Write in an efficient and engaging way. and tell all what you know!
-    Context:
-    {context}
-    
-    Query: {query}
-    
-    Answer:
-    """)
-    
+Based on the following context, provide a comprehensive and detailed answer to the query. 
+Do not summarize or shorten unnecessarily. 
+Include all relevant details, explanations, and context clearly. 
+Preserve structure using headings, bullet points, and paragraphs.
+
+Context:
+{context}
+
+Query: {query}
+
+Answer:
+""")
+
     try:
         # Generate response
         response = (prompt | llm | StrOutputParser()).invoke({
