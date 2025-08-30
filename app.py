@@ -160,5 +160,7 @@ if text_query:
             full_response = f"An error occurred while processing your request: {e}. Please try again or rephrase."
             message_placeholder.markdown(full_response)
 
-        # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+        # Add assistant response in chat history for continuity
+            st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
+
