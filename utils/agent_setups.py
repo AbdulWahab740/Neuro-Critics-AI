@@ -7,6 +7,7 @@ from utils.llm_loader import load_llm
 from tools.pdf_tools import load_pdf_and_create_temp_retriever, query_temp_pdf_for_critique
 from tools.query_tools import query_main_knowledge_base
 from tools.image_caption_tool import search_caption_with_query
+
 llm = load_llm()
 
 @st.cache_resource
@@ -20,48 +21,55 @@ def setup_agent():
     ]
     logging.info(f"Defined {len(tools)} tools for the agent.")
 
-    # Modified agent_prompt to include MessagesPlaceholder for chat history
+    # Refined prompt with graceful stop condition
     agent_prompt = PromptTemplate.from_template(
-        """You are an intelligent AI assistant capable of analyzing biomedical research,
-        loading new PDF documents, querying a knowledge base, and performing critical reviews.
-        
-        You have access to the following tools:
+        """You are an intelligent biomedical research assistant.
+You can analyze research, load new PDFs, query knowledge bases, and critique content.
 
-        - `load_pdf_and_create_temp_retriever`: Load and index a PDF into temporary memory.
-        - `query_temp_pdf_for_critique`: Query and critique the content of the currently loaded PDF.
-        - `query_main_knowledge_base`: Retrieve answers from the broader knowledge base on neurological topics.
-        - `search_caption_with_query`: Search for diagrams, images, or figures based on a natural language question by matching it to image captions extracted from the PDF.
+**Available Tools:**
+- `load_pdf_and_create_temp_retriever`: Load and index a PDF into temporary memory.
+- `query_temp_pdf_for_critique`: Query and critique the content of the currently loaded PDF.
+- `query_main_knowledge_base`: Retrieve answers from the broader knowledge base on neurological topics.
+- `search_caption_with_query`: Search for diagrams, images, or figures by matching them to image captions.
 
-        Tool usage guide:
+**How to decide which tool to use:**
+- If a PDF is already loaded:
+  - Use `query_temp_pdf_for_critique` for text, summaries, methods, or critiques.
+  - Use `search_caption_with_query` if the user refers to a diagram/figure.
+  - Use `query_main_knowledge_base` for general medical/neurological questions not tied to the PDF.
+- If no PDF is loaded and the user asks a general question, use `query_main_knowledge_base`.
 
-        - If the 'Current PDF Status' indicates a PDF is already loaded:
-            - Use `query_temp_pdf_for_critique` for **textual critiques, summaries, or methods** in the paper.
-            - Use `search_caption_with_query` if the user refers to a **diagram, image, or figure** (e.g., "show me the diagram about tau protein", "what does the image say on page 3?").
-            - Use `query_main_knowledge_base` if the user asks a general question **not specific to the loaded PDF** (e.g., "What causes migraines?", "Explain ALS symptoms").
-        - DO NOT ask for a PDF path again if one is already loaded.
+**Important Behavioral Rules:**
+- If the user says they want a "general" explanation or indicates "no further details," 
+  just provide the explanation and politely end the answer. 
+  Do NOT suggest switching topics, loading PDFs, or continuing further.
+- Be concise, factual, and avoid unnecessary follow-up questions unless the user asks for them.
+- Always prioritize clarity and accuracy.
 
-        Filter topics to match user query with knowledge base: 
-        ['Alzheimer_Disease', 'Stroke_Management', 'Epilepsy', 'Parkinson', 'Diagnostic', 'Neurotransmitter', 'Sclerosis', 'Migraine', 'Neurodevelopmental_disorder', 'TBI', 'Amyotrophic_Lateral_Sclerosis', 'Neuroinflammation', 'Sleep_disorder', 'Brain', 'Social_neurology']
+What to respond:
+- Just tell what you receive from `query_main_knowledge_base` tool.
+- Do not add any additional text or explanation or ask for follow up.
 
-        Your response should be comprehensive, well-structured, and insightful.
+Current PDF Status: {current_pdf_status}
 
-        Current PDF Status: {current_pdf_status} # New placeholder for PDF status
+Previous conversation:
+{chat_history}
 
-        Previous conversation:
-        {chat_history} # Placeholder for chat history
+User Question:
+{input}
 
-        Answer the following question:
-
-        {input}
-
-        {agent_scratchpad}
-        """
+{agent_scratchpad}
+"""
     )
+
     try:
-        # Create the agent with the updated prompt
         agent = create_tool_calling_agent(llm, tools, agent_prompt)
-        # Pass the chat history to the agent executor
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=True,
+            handle_parsing_errors=True
+        )
         logging.info("Agent Executor initialized successfully.")
         return agent_executor
     except Exception as e:
