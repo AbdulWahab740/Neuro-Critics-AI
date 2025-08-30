@@ -14,14 +14,15 @@ from utils.embeddings import load_embedding_model
 from utils.llm_loader import load_llm
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from utils.embeddings import load_embedding_model
-
+from langchain_community.retrievers.bm25 import BM25Retriever
+from langchain.retrievers import EnsembleRetriever
 
 llm = load_llm()
 embeddings = load_embedding_model()
 # --- Text Splitter for PDF ingestion ---
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=100,
+    chunk_size=512,
+    chunk_overlap=64,
     separators=["\n\n", "\n", " ", ""]
 )
 # Configure logging
@@ -60,7 +61,7 @@ def load_pdf_and_create_temp_retriever(pdf_path: str) -> str:
             documents=chunks,
             embedding=embeddings, # Use the global embedding model
         )
-        st.session_state.temp_pdf_retriever = temp_faiss_vectorstore.as_retriever(search_kwargs={"k": 4})
+        st.session_state.temp_pdf_retriever = temp_faiss_vectorstore.as_retriever(search_kwargs={"k": 10})
         st.session_state.temp_pdf_docs = chunks
 
         return f"Successfully loaded and processed PDF. Content is ready for critique or query. PDF ID: {pdf_uuid}"
@@ -81,6 +82,11 @@ def query_temp_pdf_for_critique(query: str, source_pdf_id: str = None) -> str:
     """
     if st.session_state.temp_pdf_retriever:
         logging.info(f"Querying temporary PDF for critique with: '{query}'")
+        bm25_retriever = BM25Retriever.from_documents(st.session_state.temp_pdf_docs)
+        retriever = st.session_state.temp_pdf_retriever
+        
+        ensemble_retriever = EnsembleRetriever(retrievers=[retriever, bm25_retriever], weights=[0.7, 0.3])
+        st.session_state.temp_pdf_retriever = ensemble_retriever
         docs = st.session_state.temp_pdf_retriever.invoke(query)
         context = "\n\n".join([doc.page_content for doc in docs])
         logging.info(f"Retrieved {len(docs)} chunks from temporary PDF.")
