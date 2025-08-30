@@ -10,7 +10,6 @@ from utils.llm_loader import load_llm
 from utils.agent_setups import setup_agent
 from utils.caption_index_builder import process_images_and_build_index
 from utils.pdf_load import extract_images
-from voice_chat import record_and_transcribe
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -52,75 +51,79 @@ st.markdown(
 
 with st.sidebar:
     st.header("Upload PDF for Critique")
-    uploaded_file = st.file_uploader("Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader")
+    uploaded_file = st.file_uploader(
+        "Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader"
+    )
 
-    if uploaded_file is not None and uploaded_file.name != st.session_state.last_uploaded_filename_processed:
-        st.info("Processing uploaded PDF... Please wait.")
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            temp_pdf_path = tmp_file.name
-        
-        output =  uploaded_file.name[:10] + "_extracted_images"
-        extract_images(temp_pdf_path,output)
-        process_images_and_build_index(output)
-        
-        try:
-            chat_history_for_agent = []
-            for msg in st.session_state.messages:
-                if msg["role"] == "user":
-                    chat_history_for_agent.append(HumanMessage(content=msg["content"]))
-                elif msg["role"] == "assistant":
-                    chat_history_for_agent.append(AIMessage(content=msg["content"]))
+    if uploaded_file is not None:
+        st.info(f"📄 Uploaded: {uploaded_file.name}")
 
-            current_pdf_status = "No PDF is currently loaded."
-            if st.session_state.temp_pdf_retriever:
-                current_pdf_status = f"A PDF named '{st.session_state.last_uploaded_filename_processed}' (ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) is currently loaded and available for querying."
+        # Use a dedicated temp directory (auto-cleanable later)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
+            with open(temp_pdf_path, "wb") as tmp_file:
+                tmp_file.write(uploaded_file.getvalue())
 
-            agent_output = agent_executor.invoke({
-                "input": f"Load this PDF: {temp_pdf_path}",
-                "chat_history": chat_history_for_agent,
-                "current_pdf_status": current_pdf_status
-            })
-            st.session_state.last_uploaded_filename_processed = uploaded_file.name
-            st.success(f"PDF processed Successfully!!")
-        except Exception as e:
-            st.error(f"Error processing uploaded PDF: {e}")
-            traceback.print_exc()
-        finally:
-            os.unlink(temp_pdf_path)
-        st.rerun() 
+            # Handle extracted images in the same temp folder
+            output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
+            os.makedirs(output_dir, exist_ok=True)
+
+            with st.spinner("🔍 Extracting images from PDF..."):
+                extract_images(temp_pdf_path, output_dir)
+
+            with st.spinner("⚡ Processing images and building index..."):
+                process_images_and_build_index(output_dir)
+
+            # After everything is done
+            st.success("✅ PDF successfully processed!")
+
+            try:
+                # Prepare chat history for agent
+                chat_history_for_agent = []
+                for msg in st.session_state.messages:
+                    if msg["role"] == "user":
+                        chat_history_for_agent.append(HumanMessage(content=msg["content"]))
+                    elif msg["role"] == "assistant":
+                        chat_history_for_agent.append(AIMessage(content=msg["content"]))
+
+                current_pdf_status = "No PDF is currently loaded."
+                if st.session_state.temp_pdf_retriever:
+                    current_pdf_status = (
+                        f"A PDF named '{st.session_state.last_uploaded_filename_processed}' "
+                        f"(ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) "
+                        f"is currently loaded and available for querying."
+                    )
+
+                # Run the agent with current PDF
+                agent_output = agent_executor.invoke({
+                    "input": f"Load this PDF: {temp_pdf_path}",
+                    "chat_history": chat_history_for_agent,
+                    "current_pdf_status": current_pdf_status
+                })
+
+                st.session_state.last_uploaded_filename_processed = uploaded_file.name
+                st.success("✅ PDF processed Successfully!!")
+
+            except Exception as e:
+                st.error(f"Error processing uploaded PDF: {e}")
+                traceback.print_exc()
+
+        # 🚨 No need to manually os.unlink here, everything in temp_dir is deleted automatically
+        st.rerun()
 
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-tab1, tab2 = st.tabs(["📄 Chat Input", "🎤 Voice Input"])
+text_query = st.chat_input("Ask a question or critique an uploaded paper...:")
 
-prompt = None  # Default prompt
-proceed = False  # Flag to control submission
-
-with tab1:
-    text_query = st.chat_input("Ask a question or critique an uploaded paper...:")
-    if text_query:
-        prompt = text_query
-        proceed = True
-
-with tab2:
-    voice_query = record_and_transcribe()
-    if voice_query:
-        st.markdown("✏️ **Edit or Confirm your query:**")
-        user_query = st.text_area("Your query", value=voice_query, height=50)
-        if st.button("Submit Query"):
-            prompt = user_query.strip()
-            proceed = True
-
-if proceed and prompt:
+if text_query:
     # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": text_query})
 
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(text_query)
 
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
@@ -139,7 +142,7 @@ if proceed and prompt:
          
         try:
             agent_output = agent_executor.invoke({
-                "input": prompt,
+                "input": text_query,
                 "chat_history": chat_history_for_agent,
                 "current_pdf_status": current_pdf_status
             })
