@@ -72,6 +72,8 @@ st.markdown(
 #         extract_images(temp_pdf_path, output_dir)
 #         process_images_and_build_index(output_dir)
 #         return "✅ PDF successfully processed!"
+
+
 with st.sidebar:
     st.header("Upload PDF for Critique")
     uploaded_file = st.file_uploader(
@@ -81,17 +83,18 @@ with st.sidebar:
     if uploaded_file is not None:
         st.write(f"📑 Uploaded: {uploaded_file.name}")
 
-        # Reset state if new file uploaded
+        # Reset state if a new file is uploaded
         if uploaded_file.name != st.session_state.last_uploaded_filename_processed:
             st.session_state.pdf_processed = False
             st.session_state.last_uploaded_filename_processed = uploaded_file.name
             st.session_state.temp_pdf_docs = []
             st.session_state.temp_pdf_retriever = None
 
+        # Process only if not already processed
         if not st.session_state.pdf_processed:
             st.info(f"📄 Processing: {uploaded_file.name}")
 
-            # Use /tmp (persistent during session) instead of auto-deleting TemporaryDirectory
+            # Make a persistent temp dir (not auto-deleted)
             temp_dir = tempfile.mkdtemp()
             temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
             with open(temp_pdf_path, "wb") as tmp_file:
@@ -101,18 +104,24 @@ with st.sidebar:
             output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
             os.makedirs(output_dir, exist_ok=True)
 
-            with st.spinner("🔍 Extracting images from PDF..."):
-                extract_images(temp_pdf_path, output_dir)
+            try:
+                with st.spinner("🔍 Extracting images from PDF..."):
+                    extract_images(temp_pdf_path, output_dir)
 
-            with st.spinner("⚡ Processing images and building index..."):
-                process_images_and_build_index(output_dir)
+                with st.spinner("⚡ Processing images and building index..."):
+                    process_images_and_build_index(output_dir)
 
-            # ✅ Save retriever/docs in session state (if you build them here)
-            # st.session_state.temp_pdf_retriever = retriever
-            # st.session_state.temp_pdf_docs = docs  
+                # 🔑 Save docs/retriever in session state if needed
+                # st.session_state.temp_pdf_retriever = retriever
+                # st.session_state.temp_pdf_docs = docs  
 
-            st.session_state.pdf_processed = True
-            st.success("✅ PDF successfully processed!")
+                st.session_state.pdf_processed = True
+                st.success("✅ PDF successfully processed!")
+
+            except Exception as e:
+                st.error(f"Error processing uploaded PDF: {e}")
+                traceback.print_exc()
+
         else:
             st.info("This PDF is already processed and ready for querying.")
 
@@ -196,6 +205,7 @@ if text_query:
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
 
 
 
