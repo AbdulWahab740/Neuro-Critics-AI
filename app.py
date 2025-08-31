@@ -31,12 +31,12 @@ if "last_uploaded_filename_processed" not in st.session_state:
     st.session_state.last_uploaded_filename_processed = ""
 
 # Initialize FAISS + metadata only once per session
-if "faiss_index" not in st.session_state:
-    st.session_state.faiss_index = faiss.IndexFlatL2(512)  # dimension
-    st.session_state.metadata_store = []
+# if "faiss_index" not in st.session_state:
+#     st.session_state.faiss_index = faiss.IndexFlatL2(512)  # dimension
+#     st.session_state.metadata_store = []
 
-if "pdf_processed" not in st.session_state:
-    st.session_state.pdf_processed = False
+# if "pdf_processed" not in st.session_state:
+#     st.session_state.pdf_processed = False
 
 # Initialize the agent executor
 agent_executor = setup_agent()
@@ -182,6 +182,7 @@ if text_query:
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
 
 
 
