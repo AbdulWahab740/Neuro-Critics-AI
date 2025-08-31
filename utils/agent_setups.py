@@ -14,6 +14,7 @@ llm = load_llm()
 def setup_agent():
     """Sets up the agent with the necessary tools and prompt."""
     tools = [
+        load_pdf_and_create_temp_retriever,
         query_temp_pdf_for_critique,
         query_main_knowledge_base,
         search_caption_with_query
@@ -26,6 +27,7 @@ def setup_agent():
 You can analyze research, load new PDFs, query knowledge bases, and critique content.
 
 **Available Tools:**
+- `load_pdf_and_create_temp_retriever`: Load and index a PDF into temporary memory.
 - `query_temp_pdf_for_critique`: Query and critique the content of the currently loaded PDF.
 - `query_main_knowledge_base`: Retrieve answers from the broader knowledge base on neurological topics.
 - `search_caption_with_query`: Search for diagrams, images, or figures by matching them to image captions.
@@ -33,7 +35,7 @@ You can analyze research, load new PDFs, query knowledge bases, and critique con
 **How to decide which tool to use:**
 - If a PDF is already loaded:
   - Use `query_temp_pdf_for_critique` for text, summaries, methods, or critiques.
-  - Use `search_caption_with_query` if the user refers to a diagram/figure.
+  - Use `search_caption_with_query` if the user refers to a diagram/figure. By getting the context from the image generate a good llm response on that in a structured way!
   - Use `query_main_knowledge_base` for general medical/neurological questions not tied to the PDF.
 - If no PDF is loaded and the user asks a general question, use `query_main_knowledge_base`.
 
@@ -42,6 +44,7 @@ You can analyze research, load new PDFs, query knowledge bases, and critique con
 - Preserve all formatting (headings, bullet points, paragraphs).
 - Do not paraphrase, do not compress — just deliver the tool’s output as-is.
 - If the tool output is empty, then politely say you couldn’t find an answer.
+- If you use `search_caption_with_query`, take its output (caption + metadata) and expand it into a structured biomedical explanation for the user.
 
 Current PDF Status: {current_pdf_status}
 
@@ -70,4 +73,3 @@ User Question:
         traceback.print_exc()
         st.error(f"Failed to setup agent: {e}. Check LLM and tool definitions.")
         st.stop()
-
