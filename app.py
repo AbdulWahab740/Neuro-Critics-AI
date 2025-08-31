@@ -21,6 +21,7 @@ llm = load_llm()
 topic_embeddings = pre_embed_topics(embedding_model)
 logging.info("All core components (embedding, FAISS, LLM, topic embeddings) loaded.")
 
+# Ensure required session state keys
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "temp_pdf_docs" not in st.session_state:
@@ -29,7 +30,8 @@ if "temp_pdf_retriever" not in st.session_state:
     st.session_state.temp_pdf_retriever = None
 if "last_uploaded_filename_processed" not in st.session_state:
     st.session_state.last_uploaded_filename_processed = ""
-
+if "pdf_processed" not in st.session_state:
+    st.session_state.pdf_processed = False
 # Initialize FAISS + metadata only once per session
 # if "faiss_index" not in st.session_state:
 #     st.session_state.faiss_index = faiss.IndexFlatL2(512)  # dimension
@@ -70,24 +72,32 @@ st.markdown(
 #         extract_images(temp_pdf_path, output_dir)
 #         process_images_and_build_index(output_dir)
 #         return "✅ PDF successfully processed!"
-
 with st.sidebar:
     st.header("Upload PDF for Critique")
     uploaded_file = st.file_uploader(
         "Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader"
     )
-    st.write(uploaded_file)
-    logging.info("Uploaded file")
-    if uploaded_file is not None:
-        st.info(f"📄 Uploaded: {uploaded_file.name}")
 
-        # Use a dedicated temp directory (auto-cleanable later)
-        with tempfile.TemporaryDirectory() as temp_dir:
+    if uploaded_file is not None:
+        st.write(f"📑 Uploaded: {uploaded_file.name}")
+
+        # Reset state if new file uploaded
+        if uploaded_file.name != st.session_state.last_uploaded_filename_processed:
+            st.session_state.pdf_processed = False
+            st.session_state.last_uploaded_filename_processed = uploaded_file.name
+            st.session_state.temp_pdf_docs = []
+            st.session_state.temp_pdf_retriever = None
+
+        if not st.session_state.pdf_processed:
+            st.info(f"📄 Processing: {uploaded_file.name}")
+
+            # Use /tmp (persistent during session) instead of auto-deleting TemporaryDirectory
+            temp_dir = tempfile.mkdtemp()
             temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
             with open(temp_pdf_path, "wb") as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
 
-            # Handle extracted images in the same temp folder
+            # Extract images
             output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
             os.makedirs(output_dir, exist_ok=True)
 
@@ -97,10 +107,16 @@ with st.sidebar:
             with st.spinner("⚡ Processing images and building index..."):
                 process_images_and_build_index(output_dir)
 
-            # After everything is done
-            st.success("✅ PDF successfully processed!")
+            # ✅ Save retriever/docs in session state (if you build them here)
+            # st.session_state.temp_pdf_retriever = retriever
+            # st.session_state.temp_pdf_docs = docs  
 
-            try:
+            st.session_state.pdf_processed = True
+            st.success("✅ PDF successfully processed!")
+        else:
+            st.info("This PDF is already processed and ready for querying.")
+
+        try:
                 # Prepare chat history for agent
                 chat_history_for_agent = []
                 for msg in st.session_state.messages:
@@ -127,12 +143,10 @@ with st.sidebar:
                 st.session_state.last_uploaded_filename_processed = uploaded_file.name
                 st.success("✅ PDF processed Successfully!!")
 
-            except Exception as e:
+        except Exception as e:
                 st.error(f"Error processing uploaded PDF: {e}")
                 traceback.print_exc()
 
-        # 🚨 No need to manually os.unlink here, everything in temp_dir is deleted automatically
-        st.rerun()
 
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
@@ -182,6 +196,7 @@ if text_query:
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
 
 
 
