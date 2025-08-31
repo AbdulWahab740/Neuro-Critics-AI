@@ -43,8 +43,10 @@ def generate_clip_embedding(image_path, caption):
 def add_to_index(caption, embedding, page_number, image_path):
     doc_id = str(uuid.uuid4())
     vector = np.array([embedding], dtype=np.float32)
-    faiss_index.add(vector)
-    metadata_store.append({
+    
+    # Use session state FAISS index + metadata
+    st.session_state.faiss_index.add(vector)
+    st.session_state.metadata_store.append({
         "id": doc_id,
         "caption": caption,
         "page_number": page_number,
@@ -53,10 +55,9 @@ def add_to_index(caption, embedding, page_number, image_path):
     return doc_id
 
 def save_index(index_path="captions_faiss.index", metadata_path="captions_metadata.json"):
-    faiss.write_index(faiss_index, index_path)
+    faiss.write_index(st.session_state.faiss_index, index_path)
     with open(metadata_path, "w") as f:
-        json.dump(metadata_store, f)
-    print("💾 Saved index + metadata.")
+        json.dump(st.session_state.metadata_store, f)
 
 def process_images_and_build_index(image_dir):
     for file in os.listdir(image_dir):
@@ -76,6 +77,3 @@ def process_images_and_build_index(image_dir):
                 logging.error(f"❌ Failed to process {file}: {e}")
                 st.error(f"Failed to process {file}: {e}")
     save_index()
-
-
-
