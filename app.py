@@ -102,8 +102,7 @@ with st.sidebar:
                 })
 
                 st.session_state.last_uploaded_filename_processed = uploaded_file.name
-                st.success("✅ PDF processed Successfully!!")
-
+                
             except Exception as e:
                 st.error(f"Error processing uploaded PDF: {e}")
                 traceback.print_exc()
@@ -162,5 +161,6 @@ if text_query:
 
         # Add assistant response in chat history for continuity
             st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
 
 
