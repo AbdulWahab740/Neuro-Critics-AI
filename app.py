@@ -57,33 +57,29 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-@st.cache_data
-def process_pdf(uploaded_file):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
-        with open(temp_pdf_path, "wb") as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
+# @st.cache_data
+# def process_pdf(uploaded_file):
+#     with tempfile.TemporaryDirectory() as temp_dir:
+#         temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
+#         with open(temp_pdf_path, "wb") as tmp_file:
+#             tmp_file.write(uploaded_file.getvalue())
 
-        output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
-        os.makedirs(output_dir, exist_ok=True)
+#         output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
+#         os.makedirs(output_dir, exist_ok=True)
 
-        extract_images(temp_pdf_path, output_dir)
-        process_images_and_build_index(output_dir)
-        return "✅ PDF successfully processed!"
+#         extract_images(temp_pdf_path, output_dir)
+#         process_images_and_build_index(output_dir)
+#         return "✅ PDF successfully processed!"
 
 with st.sidebar:
     st.header("Upload PDF for Critique")
     uploaded_file = st.file_uploader(
         "Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader"
     )
-    st.success(uploaded_file)
+
     if uploaded_file is not None:
-        st.session_state.pdf_processed = True
-    
         st.info(f"📄 Uploaded: {uploaded_file.name}")
-        with st.spinner("Processing..."):
-            msg = process_pdf(uploaded_file)
-        st.success(msg)
+
         # Use a dedicated temp directory (auto-cleanable later)
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
