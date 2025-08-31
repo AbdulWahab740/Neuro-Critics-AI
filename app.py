@@ -10,6 +10,7 @@ from utils.llm_loader import load_llm
 from utils.agent_setups import setup_agent
 from utils.caption_index_builder import process_images_and_build_index
 from utils.pdf_load import extract_images
+from tools.pdf_tools import load_pdf_and_create_temp_retriever
 import faiss
 import shutil
 # Configure logging
@@ -180,4 +181,5 @@ if text_query:
 
         except Exception as e:
             st.error(f"Error: {e}")
+
 
