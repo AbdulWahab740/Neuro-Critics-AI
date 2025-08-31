@@ -73,6 +73,7 @@ with st.sidebar:
         "Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader"
     )
 
+    # --- size guard ---
     if uploaded_file is not None:
         file_size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
         if file_size_mb > MAX_FILE_SIZE_MB:
@@ -88,22 +89,24 @@ with st.sidebar:
             st.session_state.last_uploaded_filename_processed = uploaded_file.name
             st.session_state.temp_pdf_docs = []
             st.session_state.temp_pdf_retriever = None
+            st.session_state.temp_pdf_path = None
 
-            # 🚮 Clear old files to save space
+            # Clear old working dir to save space
             if os.path.exists(BASE_TMP_DIR):
                 shutil.rmtree(BASE_TMP_DIR)
             os.makedirs(BASE_TMP_DIR, exist_ok=True)
 
-        # Process only if not already processed
+        # Process only once per file
         if not st.session_state.pdf_processed:
             st.info(f"📄 Processing: {uploaded_file.name}")
 
-            # Save uploaded file to /tmp/neurocritics
+            # Save uploaded PDF under /tmp/neurocritics
             temp_pdf_path = os.path.join(BASE_TMP_DIR, uploaded_file.name)
             with open(temp_pdf_path, "wb") as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
+            st.session_state.temp_pdf_path = temp_pdf_path  # keep for later
 
-            # Extract images directory
+            # Extract images dir
             output_dir = os.path.join(BASE_TMP_DIR, uploaded_file.name[:10] + "_extracted_images")
             os.makedirs(output_dir, exist_ok=True)
 
@@ -114,20 +117,45 @@ with st.sidebar:
                 with st.spinner("⚡ Processing images and building index..."):
                     process_images_and_build_index(output_dir)
 
-                # 🔑 Save docs/retriever in session state if needed
-                # st.session_state.temp_pdf_retriever = retriever
-                # st.session_state.temp_pdf_docs = docs  
+                # 👉 NOW: tell the agent to load this PDF so the tool can build the retriever
+                chat_history_for_agent = []
+                for msg in st.session_state.messages:
+                    if msg["role"] == "user":
+                        chat_history_for_agent.append(HumanMessage(content=msg["content"]))
+                    elif msg["role"] == "assistant":
+                        chat_history_for_agent.append(AIMessage(content=msg["content"]))
+
+                current_pdf_status = "No PDF is currently loaded."
+                if st.session_state.temp_pdf_retriever:
+                    current_pdf_status = (
+                        f"A PDF named '{st.session_state.last_uploaded_filename_processed}' "
+                        f"(ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) is loaded."
+                    )
+
+                # This relies on your `load_pdf_and_create_temp_retriever` tool
+                # to set st.session_state.temp_pdf_retriever / temp_pdf_docs internally.
+                with st.spinner("🧠 Initializing retriever for this PDF..."):
+                    _ = agent_executor.invoke({
+                        "input": f"Load this PDF: {temp_pdf_path}",
+                        "chat_history": chat_history_for_agent,
+                        "current_pdf_status": current_pdf_status
+                    })
+
+                # Sanity check
+                if not st.session_state.get("temp_pdf_retriever"):
+                    st.warning("PDF processed but retriever was not initialized by the tool.")
+                else:
+                    st.success("✅ PDF loaded into the agent and ready for querying!")
 
                 st.session_state.pdf_processed = True
-                st.success("✅ PDF successfully processed!")
 
             except Exception as e:
                 st.error(f"Error processing uploaded PDF: {e}")
                 traceback.print_exc()
-
         else:
             st.info("This PDF is already processed and ready for querying.")
-# Display chat messages from history on app rerun
+
+# Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -135,7 +163,6 @@ for message in st.session_state.messages:
 text_query = st.chat_input("Ask a question or critique an uploaded paper...:")
 
 if text_query:
-    # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": text_query})
 
     with st.chat_message("user"):
@@ -152,8 +179,12 @@ if text_query:
                 chat_history_for_agent.append(AIMessage(content=msg["content"]))
 
         current_pdf_status = "No PDF is currently loaded."
-        if st.session_state.temp_pdf_retriever:
-            current_pdf_status = f"A PDF named '{st.session_state.last_uploaded_filename_processed}' (ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) is currently loaded and available for querying."
+        if st.session_state.get("temp_pdf_retriever"):
+            current_pdf_status = (
+                f"A PDF named '{st.session_state.last_uploaded_filename_processed}' "
+                f"(ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) is currently loaded."
+            )
+            logging.info("PDF loaded for retrieval")
 
         try:
             agent_output = agent_executor.invoke({
@@ -162,24 +193,10 @@ if text_query:
                 "current_pdf_status": current_pdf_status
             })
             final_answer = agent_output.get("output", "I could not generate a response for your query.")
-
-            # 👇 Use markdown so headings, bullets, etc. show correctly
             message_placeholder.markdown(final_answer, unsafe_allow_html=True)
 
-            # Also save in chat history for continuity
+            # ✅ append once
             st.session_state.messages.append({"role": "assistant", "content": final_answer})
 
         except Exception as e:
             st.error(f"Error: {e}")
-
-
-        # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": final_answer})
-
-
-
-
-
-
-
-
