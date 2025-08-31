@@ -129,7 +129,7 @@ Store PDF: You can instruct the agent to "Store this paper" or "Save this PDF" t
 
 Project Structure
 This project is structured for clarity and maintainability, especially for the Streamlit application:
-
+```
 neuro-critics-rag-agent/
 ├── streamlit_rag_app.py    # The main Streamlit application file, handling UI, agent setup, and core logic.
 ├── vector_store_builder.py # Script responsible for building and populating the primary FAISS knowledge base.
@@ -140,6 +140,10 @@ neuro-critics-rag-agent/
 │   └── ...                 # (e.g., model.safetensors, tokenizer.json)
 ├── .env                    # Environment variables file (e.g., for GEMINI_API_KEY).
 └── requirements.txt        # Lists all Python dependencies required for the project.
+```
+# Demo Images:
 
-<img width="1686" height="874" alt="image" src="https://github.com/AbdulWahab740/Neuro-Critics-AI/blob/main/demo/respond_with_pdf.PNG" />
+<img width="1280" height="720" alt="image" src="https://github.com/AbdulWahab740/Neuro-Critics-AI/blob/main/demo/neuro-knowledge-base.PNG" />
+<img width="1280" height="720" alt="image" src="https://github.com/AbdulWahab740/Neuro-Critics-AI/blob/main/demo/document-critics.PNG" />
+<img width="1280" height="720" alt="image" src="https://github.com/AbdulWahab740/Neuro-Critics-AI/blob/main/demo/neuro-captions.png" />
 
