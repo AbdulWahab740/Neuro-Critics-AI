@@ -139,7 +139,7 @@ PyPika==0.48.9
 pyproject_hooks==1.2.0
 pyreadline3==3.5.4
 python-dateutil==2.9.0.post0
--e git+https://github.com/mindee/doctr.git@951c6d03ad03706df21f7d8f21f2375c31969dee#egg=python_doctr
+git+https://github.com/mindee/doctr.git@951c6d03ad03706df21f7d8f21f2375c31969dee#egg=python_doctr
 python-dotenv==1.1.1
 python-jose==3.5.0
 python-multipart==0.0.20
@@ -204,6 +204,7 @@ websockets==15.0.1
 yarl==1.20.1
 zipp==3.23.0
 zstandard==0.23.0
+
 
 
 
