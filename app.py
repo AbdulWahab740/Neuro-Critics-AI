@@ -59,20 +59,12 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-# @st.cache_data
-# def process_pdf(uploaded_file):
-#     with tempfile.TemporaryDirectory() as temp_dir:
-#         temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
-#         with open(temp_pdf_path, "wb") as tmp_file:
-#             tmp_file.write(uploaded_file.getvalue())
+# Constants
+MAX_FILE_SIZE_MB = 50
+BASE_TMP_DIR = "/tmp/neurocritics"
 
-#         output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
-#         os.makedirs(output_dir, exist_ok=True)
-
-#         extract_images(temp_pdf_path, output_dir)
-#         process_images_and_build_index(output_dir)
-#         return "✅ PDF successfully processed!"
-
+# Ensure base temp dir exists
+os.makedirs(BASE_TMP_DIR, exist_ok=True)
 
 with st.sidebar:
     st.header("Upload PDF for Critique")
@@ -81,27 +73,37 @@ with st.sidebar:
     )
 
     if uploaded_file is not None:
+        file_size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
+        if file_size_mb > MAX_FILE_SIZE_MB:
+            st.error(f"❌ File too large: {file_size_mb:.2f} MB. Limit is {MAX_FILE_SIZE_MB} MB.")
+            uploaded_file = None
+
+    if uploaded_file is not None:
         st.write(f"📑 Uploaded: {uploaded_file.name}")
 
-        # Reset state if a new file is uploaded
+        # Reset state if new file uploaded
         if uploaded_file.name != st.session_state.last_uploaded_filename_processed:
             st.session_state.pdf_processed = False
             st.session_state.last_uploaded_filename_processed = uploaded_file.name
             st.session_state.temp_pdf_docs = []
             st.session_state.temp_pdf_retriever = None
 
+            # 🚮 Clear old files to save space
+            if os.path.exists(BASE_TMP_DIR):
+                shutil.rmtree(BASE_TMP_DIR)
+            os.makedirs(BASE_TMP_DIR, exist_ok=True)
+
         # Process only if not already processed
         if not st.session_state.pdf_processed:
             st.info(f"📄 Processing: {uploaded_file.name}")
 
-            # Make a persistent temp dir (not auto-deleted)
-            temp_dir = tempfile.mkdtemp()
-            temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
+            # Save uploaded file to /tmp/neurocritics
+            temp_pdf_path = os.path.join(BASE_TMP_DIR, uploaded_file.name)
             with open(temp_pdf_path, "wb") as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
 
-            # Extract images
-            output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
+            # Extract images directory
+            output_dir = os.path.join(BASE_TMP_DIR, uploaded_file.name[:10] + "_extracted_images")
             os.makedirs(output_dir, exist_ok=True)
 
             try:
@@ -124,39 +126,6 @@ with st.sidebar:
 
         else:
             st.info("This PDF is already processed and ready for querying.")
-
-        try:
-                # Prepare chat history for agent
-                chat_history_for_agent = []
-                for msg in st.session_state.messages:
-                    if msg["role"] == "user":
-                        chat_history_for_agent.append(HumanMessage(content=msg["content"]))
-                    elif msg["role"] == "assistant":
-                        chat_history_for_agent.append(AIMessage(content=msg["content"]))
-
-                current_pdf_status = "No PDF is currently loaded."
-                if st.session_state.temp_pdf_retriever:
-                    current_pdf_status = (
-                        f"A PDF named '{st.session_state.last_uploaded_filename_processed}' "
-                        f"(ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) "
-                        f"is currently loaded and available for querying."
-                    )
-
-                # Run the agent with current PDF
-                agent_output = agent_executor.invoke({
-                    "input": f"Load this PDF: {temp_pdf_path}",
-                    "chat_history": chat_history_for_agent,
-                    "current_pdf_status": current_pdf_status
-                })
-
-                st.session_state.last_uploaded_filename_processed = uploaded_file.name
-                st.success("✅ PDF processed Successfully!!")
-
-        except Exception as e:
-                st.error(f"Error processing uploaded PDF: {e}")
-                traceback.print_exc()
-
-
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -205,6 +174,7 @@ if text_query:
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
 
 
 
