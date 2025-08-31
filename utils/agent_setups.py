@@ -14,7 +14,6 @@ llm = load_llm()
 def setup_agent():
     """Sets up the agent with the necessary tools and prompt."""
     tools = [
-        load_pdf_and_create_temp_retriever,
         query_temp_pdf_for_critique,
         query_main_knowledge_base,
         search_caption_with_query
@@ -27,7 +26,6 @@ def setup_agent():
 You can analyze research, load new PDFs, query knowledge bases, and critique content.
 
 **Available Tools:**
-- `load_pdf_and_create_temp_retriever`: Load and index a PDF into temporary memory.
 - `query_temp_pdf_for_critique`: Query and critique the content of the currently loaded PDF.
 - `query_main_knowledge_base`: Retrieve answers from the broader knowledge base on neurological topics.
 - `search_caption_with_query`: Search for diagrams, images, or figures by matching them to image captions.
@@ -72,3 +70,4 @@ User Question:
         traceback.print_exc()
         st.error(f"Failed to setup agent: {e}. Check LLM and tool definitions.")
         st.stop()
+
