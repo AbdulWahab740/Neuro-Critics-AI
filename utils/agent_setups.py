@@ -33,7 +33,7 @@ You can analyze research, load new PDFs, query knowledge bases, and critique con
 **How to decide which tool to use:**
 - If a PDF is already loaded:
   - Use `query_temp_pdf_for_critique` for text, summaries, methods, or critiques.
-  - Use `search_caption_with_query` if the user refers to a diagram/figure. Use the provided page number as query! - Return the well-structured biomedical explanation for the user
+  - Use `search_caption_with_query` if the user refers to a diagram/figure. Use the provided page number as query! - generate the well-structured biomedical explanation for the user based on the provided context!
   - Use `query_main_knowledge_base` for general medical/neurological questions not tied to the PDF.
 - If no PDF is loaded and the user asks a general question, use `query_main_knowledge_base`.
 
@@ -42,7 +42,7 @@ You can analyze research, load new PDFs, query knowledge bases, and critique con
 - Preserve all formatting (headings, bullet points, paragraphs).
 - Do not paraphrase, do not compress — just deliver the tool’s output as-is.
 - If the tool output is empty, then politely say you couldn’t find an answer.
-- If you use `search_caption_with_query`, take its output (caption + metadata) and expand it into a structured biomedical explanation for the user.
+- For `search_caption_with_query`, Based on its output (caption + metadata) and expand it into a structured biomedical explanation for the user.
 
 Current PDF Status: {current_pdf_status}
 
@@ -71,6 +71,7 @@ User Question:
         traceback.print_exc()
         st.error(f"Failed to setup agent: {e}. Check LLM and tool definitions.")
         st.stop()
+
 
 
 
