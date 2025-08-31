@@ -11,6 +11,7 @@ from utils.agent_setups import setup_agent
 from utils.caption_index_builder import process_images_and_build_index
 from utils.pdf_load import extract_images
 import faiss
+import shutil
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -174,6 +175,7 @@ if text_query:
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
 
 
 
