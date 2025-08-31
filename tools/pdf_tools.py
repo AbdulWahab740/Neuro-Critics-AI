@@ -29,8 +29,6 @@ text_splitter = RecursiveCharacterTextSplitter(
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 import streamlit as st
 
-# Tool 1: Load PDF and create a temporary retriever
-@tool
 def load_pdf_and_create_temp_retriever(pdf_path: str) -> str:
     """
     Loads a PDF file from a given path, processes its content,
@@ -112,4 +110,5 @@ def query_temp_pdf_for_critique(query: str, source_pdf_id: str = None) -> str:
             return f"Error summarizing content from temporary PDF: {e}"
     else:
         return "No PDF has been loaded or processed for temporary querying."
+
 
