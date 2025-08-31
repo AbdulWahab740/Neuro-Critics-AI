@@ -62,16 +62,20 @@ def process_images_and_build_index(image_dir):
     for file in os.listdir(image_dir):
         if file.lower().endswith((".png", ".jpg", ".jpeg")):
             image_path = os.path.join(image_dir, file)
-            print(f"📄 Processing: {file}")
-            caption = extract_ocr_text(image_path)
-            embedding = generate_clip_embedding(image_path, caption)
-            
-            match = re.search(r'(\d+)_img\d+', file)
-            page_number = int(match.group(1)) if match else -1
-            doc_id = add_to_index(caption, embedding, page_number, image_path)
-            print(f"✅ Indexed: {doc_id} | Caption: {caption[:50]}...")
-        
-        logging.info(f"Processed {file} with caption: {caption[:50]}...")
+            try:
+                print(f"📄 Processing: {file}")
+                caption = extract_ocr_text(image_path)
+                embedding = generate_clip_embedding(image_path, caption)
+                
+                match = re.search(r'(\d+)_img\d+', file)
+                page_number = int(match.group(1)) if match else -1
+                doc_id = add_to_index(caption, embedding, page_number, image_path)
+                print(f"✅ Indexed: {doc_id} | Caption: {caption[:50]}...")
+                logging.info(f"Processed {file} with caption: {caption[:50]}...")
+            except Exception as e:
+                logging.error(f"❌ Failed to process {file}: {e}")
+                st.error(f"Failed to process {file}: {e}")
     save_index()
+
 
 
