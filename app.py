@@ -117,35 +117,15 @@ with st.sidebar:
                 with st.spinner("⚡ Processing images and building index..."):
                     process_images_and_build_index(output_dir)
 
-                # 👉 NOW: tell the agent to load this PDF so the tool can build the retriever
-                chat_history_for_agent = []
-                for msg in st.session_state.messages:
-                    if msg["role"] == "user":
-                        chat_history_for_agent.append(HumanMessage(content=msg["content"]))
-                    elif msg["role"] == "assistant":
-                        chat_history_for_agent.append(AIMessage(content=msg["content"]))
-
-                current_pdf_status = "No PDF is currently loaded."
-                if st.session_state.temp_pdf_retriever:
-                    current_pdf_status = (
-                        f"A PDF named '{st.session_state.last_uploaded_filename_processed}' "
-                        f"(ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) is loaded."
-                    )
-
-                # This relies on your `load_pdf_and_create_temp_retriever` tool
-                # to set st.session_state.temp_pdf_retriever / temp_pdf_docs internally.
+                # 🔑 Call retriever directly instead of agent
                 with st.spinner("🧠 Initializing retriever for this PDF..."):
-                    _ = agent_executor.invoke({
-                        "input": f"Load this PDF: {temp_pdf_path}",
-                        "chat_history": chat_history_for_agent,
-                        "current_pdf_status": current_pdf_status
-                    })
+                    confirmation = load_pdf_and_create_temp_retriever(temp_pdf_path)
+                    st.info(confirmation)
 
-                # Sanity check
                 if not st.session_state.get("temp_pdf_retriever"):
-                    st.warning("PDF processed but retriever was not initialized by the tool.")
+                    st.warning("PDF processed but retriever was not initialized.")
                 else:
-                    st.success("✅ PDF loaded into the agent and ready for querying!")
+                    st.success("✅ PDF loaded and ready for querying!")
 
                 st.session_state.pdf_processed = True
 
@@ -200,3 +180,4 @@ if text_query:
 
         except Exception as e:
             st.error(f"Error: {e}")
+
