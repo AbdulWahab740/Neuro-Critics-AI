@@ -10,6 +10,7 @@ from utils.llm_loader import load_llm
 from utils.agent_setups import setup_agent
 from utils.caption_index_builder import process_images_and_build_index
 from utils.pdf_load import extract_images
+import faiss
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -28,6 +29,14 @@ if "temp_pdf_retriever" not in st.session_state:
     st.session_state.temp_pdf_retriever = None
 if "last_uploaded_filename_processed" not in st.session_state:
     st.session_state.last_uploaded_filename_processed = ""
+
+# Initialize FAISS + metadata only once per session
+if "faiss_index" not in st.session_state:
+    st.session_state.faiss_index = faiss.IndexFlatL2(512)  # dimension
+    st.session_state.metadata_store = []
+
+if "pdf_processed" not in st.session_state:
+    st.session_state.pdf_processed = False
 
 # Initialize the agent executor
 agent_executor = setup_agent()
@@ -48,6 +57,19 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+@st.cache_data
+def process_pdf(uploaded_file):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
+        with open(temp_pdf_path, "wb") as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+
+        output_dir = os.path.join(temp_dir, uploaded_file.name[:10] + "_extracted_images")
+        os.makedirs(output_dir, exist_ok=True)
+
+        extract_images(temp_pdf_path, output_dir)
+        process_images_and_build_index(output_dir)
+        return "✅ PDF successfully processed!"
 
 with st.sidebar:
     st.header("Upload PDF for Critique")
@@ -55,9 +77,13 @@ with st.sidebar:
         "Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader"
     )
 
-    if uploaded_file is not None:
+    if uploaded_file is not None and "pdf_processed" not in st.session_state:
+        st.session_state.pdf_processed = True
+    
         st.info(f"📄 Uploaded: {uploaded_file.name}")
-
+        with st.spinner("Processing..."):
+            msg = process_pdf(uploaded_file)
+        st.success(msg)
         # Use a dedicated temp directory (auto-cleanable later)
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
@@ -102,7 +128,8 @@ with st.sidebar:
                 })
 
                 st.session_state.last_uploaded_filename_processed = uploaded_file.name
-                
+                st.success("✅ PDF processed Successfully!!")
+
             except Exception as e:
                 st.error(f"Error processing uploaded PDF: {e}")
                 traceback.print_exc()
@@ -126,7 +153,6 @@ if text_query:
 
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        full_response = ""
 
         chat_history_for_agent = []
         for msg in st.session_state.messages:
@@ -138,7 +164,7 @@ if text_query:
         current_pdf_status = "No PDF is currently loaded."
         if st.session_state.temp_pdf_retriever:
             current_pdf_status = f"A PDF named '{st.session_state.last_uploaded_filename_processed}' (ID: {st.session_state.temp_pdf_docs[0].metadata.get('source_pdf_id', 'N/A')}) is currently loaded and available for querying."
-         
+
         try:
             agent_output = agent_executor.invoke({
                 "input": text_query,
@@ -147,20 +173,15 @@ if text_query:
             })
             final_answer = agent_output.get("output", "I could not generate a response for your query.")
 
-            # Simulate streaming by splitting the response
-            for chunk in final_answer.split(" "):
-                full_response += chunk + " "
-                message_placeholder.markdown(full_response + "▌")
-            message_placeholder.markdown(full_response)
+            # 👇 Use markdown so headings, bullets, etc. show correctly
+            message_placeholder.markdown(final_answer, unsafe_allow_html=True)
 
-        except Exception as e:
-            logging.error(f"Error during agent invocation: {e}")
-            traceback.print_exc()
-            full_response = f"An error occurred while processing your request: {e}. Please try again or rephrase."
-            message_placeholder.markdown(full_response)
-
-        # Add assistant response in chat history for continuity
+            # Also save in chat history for continuity
             st.session_state.messages.append({"role": "assistant", "content": final_answer})
 
+        except Exception as e:
+            st.error(f"Error: {e}")
 
 
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": final_answer})
