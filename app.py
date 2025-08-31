@@ -76,7 +76,8 @@ with st.sidebar:
     uploaded_file = st.file_uploader(
         "Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader"
     )
-
+    st.write(uploaded_file)
+    logging.info("Uploaded file")
     if uploaded_file is not None:
         st.info(f"📄 Uploaded: {uploaded_file.name}")
 
@@ -181,5 +182,6 @@ if text_query:
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
 
 
