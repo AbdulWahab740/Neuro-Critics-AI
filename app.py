@@ -77,7 +77,7 @@ with st.sidebar:
         "Choose a PDF file", type="pdf", accept_multiple_files=False, key="pdf_uploader"
     )
 
-    if uploaded_file is not None and "pdf_processed" not in st.session_state:
+    if uploaded_file is not None:
         st.session_state.pdf_processed = True
     
         st.info(f"📄 Uploaded: {uploaded_file.name}")
@@ -185,3 +185,4 @@ if text_query:
 
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": final_answer})
+
