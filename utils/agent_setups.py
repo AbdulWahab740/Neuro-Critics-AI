@@ -44,7 +44,7 @@ You can analyze research, load new PDFs, query knowledge bases, and critique con
 - Preserve all formatting (headings, bullet points, paragraphs).
 - Do not paraphrase, do not compress — just deliver the tool’s output as-is.
 - If the tool output is empty, then politely say you couldn’t find an answer.
-- If you use `search_caption_with_query`, expand its into a structured biomedical explanation for the user.
+- If you use `search_caption_with_query`, take its output (caption + metadata) and expand it into a structured biomedical explanation for the user.
 
 Current PDF Status: {current_pdf_status}
 
@@ -73,4 +73,3 @@ User Question:
         traceback.print_exc()
         st.error(f"Failed to setup agent: {e}. Check LLM and tool definitions.")
         st.stop()
-
